@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Punch In/Out</title>
+<link rel="stylesheet" href="../../UI/axpertUI/plugins.bundle.css">
+    <link rel="stylesheet" href="../../UI/axpertUI/style.bundle.css">
+    <link rel="stylesheet" href="../../ThirdParty/jquery-confirm-master/jquery-confirm.min.css">
+      <script type="text/javascript" src="../../UI/axpertUI/plugins.bundle.js"></script>
+    <script type="text/javascript" src="../../UI/axpertUI/scripts.bundle.js"></script>
+    <script type="text/javascript" src="../../Js/noConflict.min.js"></script>
+    <script type="text/javascript" src="../../ThirdParty/jquery-confirm-master/jquery-confirm.min.js"></script>
+    <script type="text/javascript" src="../../Js/alerts.min.js"></script>
+    <script type="text/javascript" src="../../Js/common.min.js?v=13301"></script>
+    <script src="../../AxpertAPIs/js/AxpertAPIs.js?v=1"></script>
+<script>
+// Function to handle Punch In
+function punchIn() {
+    AxSetValue("AXPKEY000000010010", "Empcode", "1", "1", "Raj");
+    AxSetValue("AXPKEY000000010010", "type", "1", "1", "Punch In");
+    AxSetValue("AXPKEY000000010010", "punchtime", "1", "1", new Date().toLocaleTimeString());
+	var result = AxCallSubmitDataAPI("AXPKEY000000010010", "0");
+	alert(result);
+}
+
+// Function to handle Punch Out
+function punchOut() {
+    AxSetValue("AXPKEY000000010010", "Empcode", "1", "1", "Raj");
+    AxSetValue("AXPKEY000000010010", "type", "1", "1", "Punch Out");
+    AxSetValue("AXPKEY000000010010", "punchtime", "1", "1", new Date().toLocaleTimeString());
+	var result = AxCallSubmitDataAPI("AXPKEY000000010010", "0");
+	alert(result);
+}
+</script>
+</head>
+<body>
+
+<div class="container mt-5">
+    <!-- Punch In Button with onclick event -->
+    <button type="button" class="btn btn-success" onclick="punchIn()">Punch In</button>
+
+    <!-- Punch Out Button with onclick event -->
+    <button type="button" class="btn btn btn-warning" onclick="punchOut()">Punch Out</button>
+</div>
+</html>

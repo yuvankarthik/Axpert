@@ -224,6 +224,7 @@ public partial class AxPlugins_AxpertAPIs_aspx_AxpertAPIs : System.Web.UI.Page
             PublicKey = apiPublicKey,
             UserName = HttpContext.Current.Session["username"].ToString(),
             GetSqlData = new {
+                UserName = HttpContext.Current.Session["username"].ToString(),
                 Trace = HttpContext.Current.Session["AxTrace"].ToString(),
             },
             SqlParams = sqlParams
@@ -302,6 +303,7 @@ public partial class AxPlugins_AxpertAPIs_aspx_AxpertAPIs : System.Web.UI.Page
             UserName = HttpContext.Current.Session["username"].ToString(),
             SubmitData = new
             {
+                UserName = HttpContext.Current.Session["username"].ToString(),
                 trace = HttpContext.Current.Session["AxTrace"].ToString(),
                 keyfield = "",
                 dataarray = new

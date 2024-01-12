@@ -313,6 +313,8 @@ public partial class AxPlugins_AxpertAPIs_aspx_AxpertAPIs : System.Web.UI.Page
             }
         };
 
+        HttpContext.Current.Session.Remove("AxAPISubmitData-" + apiPublicKey);
+
         var tasks = CallWebAPI(tasksUrl, "POST", "application/json", JsonConvert.SerializeObject(connectionDetails));
         return tasks;
     }

@@ -1,0 +1,8 @@
+firesql({wloop},{select itemid from item where length(coalesce(shopify_id,'1')) < 2 and shopify_posted='F' order by createdon desc limit 3})
+while sqleof({wloop}) = {F}
+itemrecid := sqlget({wloop},{itemid})
+firesql({a},{select fn_shopify_rmq_product( cast( :itemrecid as numeric), cast( :axp_appschema as varchar)) apireq from dual})
+execapirequeststring := SQLGet({a},{apireq})
+apires := AxExecuteAPI({Shopify_Push_Queue})
+sqlnext({wloop})
+endloop

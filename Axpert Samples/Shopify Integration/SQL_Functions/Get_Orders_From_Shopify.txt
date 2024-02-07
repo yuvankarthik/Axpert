@@ -1,0 +1,40 @@
+CREATE OR REPLACE FUNCTION agileerpdev.shopify_create_order(p_sp_json character varying, p_enc_key character varying, p_project character varying)
+ RETURNS character varying
+ LANGUAGE plpgsql
+AS $function$
+declare
+	v_ax_json varchar := '';
+	r record;
+	cur_shopify_order cursor for (with shopify_orders as (select order_id, currency, shipping_address::jsonb ->> 'first_name' first_name,
+	shipping_address::jsonb ->> 'last_name' last_name,jsonb_array_elements(line_items::jsonb) ->> 'id' line_item_id, jsonb_array_elements(line_items::jsonb) ->> 'price' price,
+	jsonb_array_elements(line_items::jsonb) ->> 'title' title,jsonb_array_elements(line_items::jsonb) ->> 'quantity' quantity from (select
+	orders ->> 'id' order_id , orders ->> 'currency' currency,
+	orders ->> 'line_items' line_items, orders ->> 'shipping_address' shipping_address
+	from jsonb_array_elements((select j.* from jsonb_to_record(p_sp_json::jsonb)
+	j (orders jsonb))) orders ) b
+	), shopify_order_table as (select *, row_number () over(partition by order_id, currency order by line_item_id) rn from shopify_orders)
+	select regexp_replace(regexp_replace(left(ltrim((jsonb_build_object('data' || nextval('data_seq')::varchar ,
+    json_build_object('mode', 'new','recordid', '0',
+	'dc1',  jsonb_build_object('row1', jsonb_build_object('shopify_orderid', order_id, 'branch', 'HEAD OFFICE', 'customer', first_name || ' ' || coalesce(last_name, ''),
+	'payterm', 'Immediate', 'salesperson', 'Sales Executive', 'currency', currency, 'fromshopify', 'T')),
+	'dc2', json_agg(jsonb_build_object('row'||rn, (jsonb_build_object('itemname', title, 'actualfobrate', price, 'uom', '1N',
+	'salesqty', quantity, 'disctype', 'NA')))))))::varchar, '{'), -1), '[\[\]]', '', 'g'), '}}, {"row', '}, "row', 'g') as order_detail
+	from shopify_order_table
+	group by order_id, first_name, last_name, currency);
+	
+begin
+	drop sequence data_seq;
+	create sequence data_seq start with 1 increment by 1;
+ 
+	for r in cur_shopify_order loop
+		if v_ax_json = '' then
+			v_ax_json := v_ax_json || r.order_detail::varchar;
+		else
+			v_ax_json := v_ax_json || ', '|| r.order_detail::varchar;
+		end if;
+	end loop;
+	v_ax_json := '{"SecretKey":"'|| p_enc_key ||'", "apidesc":"Get_Orders","queuename":"shopify_inbound","project":"'|| p_project || '","submitdata":{"name":"saord","trace":"false","keyfield":"","dataarray":{' || v_ax_json || '}}}';
+	return v_ax_json;
+end;
+$function$
+;

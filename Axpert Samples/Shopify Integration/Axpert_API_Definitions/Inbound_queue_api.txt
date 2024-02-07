@@ -1,0 +1,6 @@
+Category:- NA
+Response type :- External
+Response Format :-JSON
+Name:- inbound queue api
+API Method :- Post
+URL :- http://agilecloud.biz/ARM/api/v1/ARMQueueSubmit

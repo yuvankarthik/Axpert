@@ -1,0 +1,46 @@
+CREATE OR REPLACE FUNCTION agileerpdev.create_multiple_customers(p_sp_json character varying, p_enc_key character varying, p_project character varying)
+ RETURNS character varying
+ LANGUAGE plpgsql
+AS $function$
+declare
+	v_ax_json varchar := '';
+	r record;
+	sh_order cursor for (with scustomers as (select customer_id, first_name, last_name, email, phone, currency ,
+	default_address::jsonb ->> 'company' company, default_address::jsonb ->> 'address1' address1,
+	default_address::jsonb ->> 'address2' address2, default_address::jsonb ->> 'city' city,
+	default_address::jsonb ->> 'province' province, default_address::jsonb ->> 'country' country,
+	default_address::jsonb ->> 'zip' zip, default_address::jsonb ->> 'phone' d_phone
+	from (select
+	customers ->> 'id' customer_id, customers ->> 'first_name' first_name, customers ->> 'last_name' last_name, customers ->> 'email' email,
+	customers ->> 'phone' phone, customers ->> 'currency' currency,
+	customers ->> 'default_address' default_address
+	from jsonb_array_elements((select j.* from jsonb_to_record(p_sp_json::jsonb)
+	j (customers jsonb))) customers ) b
+	)
+	select left(ltrim((regexp_replace(( regexp_replace((regexp_replace((regexp_replace((
+	select
+    jsonb_build_object('data' || nextval('data_seq')::varchar ,
+    json_build_object('mode', 'new','recordid', '0',
+	'dc1', json_build_object('row1', json_build_object('shopify_id', customer_id, 'party_name', first_name || ' ' || coalesce(last_name, ''), 'company', company,
+	'currency' , currency, 'creditlimit', 1000000, 'statejurisdiction', 'KARNATAKA')),
+	'dc2', jsonb_build_object('row1', json_build_object('primary_address', case when length(address1 || ' ' || coalesce(address2, ''))<2 then 'NA' else address1 || ' ' || coalesce(address2, '') end
+	, 'city', upper(city), 'state', upper(province), 'country', upper(country), 'pincode',zip,
+	'phone', phone, 'email', email)))))::varchar, '\\', '','g'))::varchar, '"dc2": "{','"dc2": {'))::varchar, '}"}$','}}')
+	)::varchar, '}"', '}}', 'g'))::varchar, '{'), -1) as customer_detail
+	from scustomers);
+begin
+	drop sequence data_seq;
+	create sequence data_seq start with 1 increment by 1;
+ 
+	for r in sh_order loop
+		if v_ax_json = '' then
+			v_ax_json := v_ax_json || r.customer_detail::varchar;
+		else
+			v_ax_json := v_ax_json || ', '|| r.customer_detail::varchar;
+		end if;
+	end loop;
+	v_ax_json := '{"SecretKey":"'|| p_enc_key ||'","apidesc":"Get_Customer_Shopify","queuename":"shopify_inbound","project":"'|| p_project || '","submitdata":{"name":"gcust","trace":"false","dataarray":{' || v_ax_json || '}}}';
+	return v_ax_json;
+end;
+$function$
+;

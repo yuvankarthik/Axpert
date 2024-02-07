@@ -1,0 +1,24 @@
+CREATE OR REPLACE FUNCTION agileerpdev.fn_shopify_rmq_fulfill(precordid numeric, pfullfillid character varying, prunschema character varying)
+ RETURNS json
+ LANGUAGE plpgsql
+AS $function$
+declare
+v_payload JSON;
+v_fullfillid varchar;
+
+begin
+
+select shopify_fulfillment_id  into v_fullfillid from salesinvoicehdr s where salesinvoicehdrid =precordid;
+
+with a as(select execapiurl url,execapimethod method from executeapidef e where execapidefname ='Shopify_Post_Fulfillment'), 
+b as (select  json_build_object('fulfillment', json_build_object('line_items_by_fulfillment_order',json_build_array(json_build_object('fulfillment_order_id',v_fullfillid, 'fulfillment_order_line_items',json_agg(row_to_json(c)))))) reqstr  from 
+(select shopify_fulfill_itemid id ,round(billqty+freeqty)  quantity from salesinvoicedtl s where salesinvoicehdrid =precordid)c)
+select json_build_object('queuename','Shopify_Outbound','queuedata','shopify','queuejson',json_build_object('project','agiledemo','url',a.url,'method',a.method,'headerstring','Replace actual headers here','requeststring',b.reqstr,'apidesc','Post_Fulfillment_Shopify'))
+into v_payload from a,b;
+
+return replace(v_payload::varchar,'"Replace actual headers here"','{"X-Shopify-Access-Token": "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"}');
+	
+end;
+
+$function$
+;

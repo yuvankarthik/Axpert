@@ -1,0 +1,8 @@
+Category:- NA
+Response type :- External
+Response Format :-JSON
+Name:- GetShopifyOrders
+API Method :- Get
+URL :- https://b843cb-2.myshopify.com/admin/api/2024-01/orders.json
+Parameter string :- created_at_min=
+Header string :- X-Shopify-Access-Token=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

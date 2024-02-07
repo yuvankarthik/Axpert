@@ -1,0 +1,10 @@
+firesql({wloop},{select shopify_orderid  orderid from sohdr where coalesce(shopify_fulfill_upd,'F')='F' order by createdon desc limit 10})
+while sqleof({wloop}) = {F}
+shopifyordid := sqlget({wloop},{orderid})
+firesql({c},{select replace(execapiurl,'~orderid~', :shopifyordid) fulfilurl from executeapidef where execapidefname ='Shopify_Get_Fulfillment'})
+ffurl := SQLGet({c},{fulfilurl})
+firesql({pload},{select fn_shopify_rmq_get_ffillid( cast(:ffurl as varchar)) reqstr from dual})
+execapirequeststring := SQLGet({pload},{reqstr})
+AxExecuteAPI({Shopify_Push_Queue})
+sqlnext({wloop})
+endloop

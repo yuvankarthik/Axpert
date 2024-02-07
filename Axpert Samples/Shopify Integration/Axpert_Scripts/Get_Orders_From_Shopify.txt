@@ -1,0 +1,20 @@
+firesql({execapiparam},{select concat('limit=1&created_at_min=',to_char(max(endtime)- interval '2' day,'YYYY-MM-DD HH24:MI'||'%2b05:30')) as presult from axapijobdetails where url='https://b843cb-2.myshopify.com/admin/api/2024-01/orders.json'})
+ExecAPIParameterString:=sqlget({execapiparam},{presult})
+execapi:=AxExecuteAPI({GetShopifyorders})
+execapiurl:={https://agilecloud.biz/arm/api/v1/ARMGetEncryptedSecret}
+ExecAPIMethod := {Post}
+ExecAPIParameterString:={}
+ExecAPIHeaderString := {}
+execapirequeststring:={{"secretkey": "1853834254561120"}}
+execapi1:=AxExecuteAPI({encrypt})
+firesql({projectname},{SELECT 'agiledemo' AS pname from dual})
+project_name:=sqlget({projectname},{pname})
+firesql({requestforinbound},{select shopify_create_order(:execapi,:execapi1,:project_name) as result1})
+requeststring:=sqlget({requestforinbound},{result1})
+ExecAPIRequestString:=requeststring
+execapiurl:={http://agilecloud.biz/ARM/api/v1/ARMQueueSubmit}
+ExecAPIParameterString:={}
+ExecAPIHeaderString := {}
+ExecAPIMethod := {Post}
+ExecAPIRequestString:=requeststring
+execapi2:=AxExecuteAPI({inbound queue api})

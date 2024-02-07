@@ -1,0 +1,9 @@
+firesql({wloop},{select salesinvoicehdrid,shopify_fulfillment_id from salesinvoicehdr  where shopifyflag='F' order by createdon desc limit 3})
+while sqleof({wloop}) = {F}
+sirecid := sqlget({wloop},{salesinvoicehdrid})
+fulfillid := sqlget({wloop},{shopify_fulfillment_id})
+firesql({a},{select fn_shopify_rmq_fulfill( cast( :sirecid as numeric),cast( :fulfillid as varchar),cast( :axp_appschema as varchar)) apireq from dual})
+execapirequeststring := SQLGet({a},{apireq})
+AxExecuteAPI({Shopify_Push_Queue})
+sqlnext({wloop})
+endloop

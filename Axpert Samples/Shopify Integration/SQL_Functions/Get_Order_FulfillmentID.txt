@@ -1,0 +1,21 @@
+CREATE OR REPLACE FUNCTION agileerpdev.fn_shopify_rmq_get_ffillid(purl character varying)
+ RETURNS json
+ LANGUAGE plpgsql
+AS $function$
+declare
+v_payload JSON;
+
+begin
+
+
+select json_build_object('queuename','Shopify_Outbound','queuedata','shopify','queuejson',
+json_build_object('project','agiledemo','url',purl,'method','Get','apidesc','Get_Fulfillment_ID_Shopify',
+'headerstring','Replace actual headers here','requeststring',''))
+into v_payload;
+
+return replace(v_payload::varchar,'"Replace actual headers here"','{"X-Shopify-Access-Token": "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"}');
+	
+end;
+
+$function$
+;
